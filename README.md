@@ -32,3 +32,64 @@ Uma interface web que consome dados via MQTT para exibição e controle do micro
 
 ### 4.2. Detectar Anomalias
 O backend executa uma análise estatística simples com base na média móvel dos últimos 50 dados enviados para verificar e alertar se ocorreu alguma anomalia na leitura dos dados.
+
+---
+
+## 5. Estrutura do repositório
+
+```
+projeto-iot/
+├── firmware/        ESP32 (Wokwi, MicroPython) — src/main.cpp + Wokwi
+├── mosquitto/       broker Mosquitto (docker-compose + mosquitto.conf)
+├── dashboard/       app React (Vite + MQTT.js + Recharts)
+├── tests/           suíte de testes Python (paho-mqtt)
+└── docs/            documentação e resultados dos testes
+```
+
+## 6. Como executar
+
+### 6.1. Broker (Mosquitto)
+
+```bash
+cd mosquitto
+docker compose up -d          # MQTT (1883) e WebSocket (9001)
+docker compose logs -f
+```
+OBS: Necessário apenas se for executar o código local, mas como está sendo utilizado o Wokwi não é possível se conectar ao broker no localhost, sendo utilizado o `test.mosquitto.org`
+
+### 6.2. Firmware (ESP32)
+
+Copiar código main.py e diagram.json e exextuar na plataforma Wokwi.
+
+### 6.3. Dashboard (React)
+
+```bash
+cd dashboard
+npm install
+npm run dev                   # http://localhost:5173
+```
+
+O broker fica em `dashboard/src/config.js` — use o **mesmo** que o firmware
+(`wss://broker.hivemq.com:8884/mqtt` para Wokwi, ou `ws://localhost:9001` local).
+
+### 6.4. Testes
+
+```bash
+cd tests
+python3 run_tests.py          # roda a suíte e grava docs/resultados/
+```
+
+## 7. Verificar mensagens manualmente
+
+```bash
+mosquitto_sub -h test.mosquitto.org -t "imd/tec/com/iot/rodflaw" -v
+mosquitto_pub -h test.mosquitto.org -t "imd/tec/com/iot/rodflaw" \
+  -m '{"id_dispositivo":"esp32-01","temperatura":25.4,"umidade":68.2,"dataHora":"2026-06-14T10:30:00"}'
+```
+
+## 8. Documentação completa
+
+Toda a documentação do projeto está consolidada em um único arquivo `realtorio_final.md` no diretório `docs`:
+
+- [docs/relatorio_final.md](docs/relatorio_final.md) — relatório técnico final
+- [docs/resultados/](docs/resultados/) — resultados das execuções dos testes
